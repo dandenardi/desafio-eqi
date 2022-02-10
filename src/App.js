@@ -5,6 +5,9 @@ import './App.css';
 import axios from 'axios';
 
 
+const api = axios.create({
+  baseURL: 'http://localhost:3000'
+});
 //fazer os estados dos resultados (5), baseados em rendimento e indexacao (restante eh fixo)
 
 function App() {
@@ -13,19 +16,15 @@ function App() {
   const [apiData, setApiData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [indicators, setIndicators] = useState([]);
-  const [sim, setSim] = useState({});
-  const [simIndex, setSimIndex] = useState(0);
-  const [simOpt, setSimOpt] = useState('');
+  const [indicators, setIndicators] = useState(null);
+  const [sim, setSim] = useState(null);
+  const [simIndex, setSimIndex] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [criteria, setCriteria] = useState('');
   const [simBoxValues, setSimBoxValues] = useState({});
   
 
-  const [simChartValues, setSimChartValues] = useState({
-    withContribution: [{}],
-    withoutContribution: [{}]
-  })
+  const [simChartValues, setSimChartValues] = useState();
 
   const [result, setResult] = useState(false);
   const [revenue, setRevenue] = useState('bruto');
@@ -36,49 +35,21 @@ function App() {
   const [selectData, setSelectData] = useState(0);
 
 
-  const fetchDataInd = useCallback (() => {
-    axios
-      .get('http://localhost:3000/indicadores')
-      .then(resp => {
-        setIndicators(resp.data)
-        setIsLoading(false)
-      }
-
-      )
-      .catch(error  => {
-        setError(error.message)
-        setIsLoading(false)
-      })
-  }, []) 
+  useEffect(() => {
+    async function getSimData() {
+      const response = await api.get('/simulacoes');
+      setSim(response.data);
+    }
+    getSimData();  
+  }, []);
 
   useEffect(() => {
-    fetchDataInd()
-  }, [fetchDataInd])
-    
-  const fetchDataSim = useCallback (() => {
-    axios
-      .get('http://localhost:3000/simulacoes')
-      .then(resp => {
-        setSim(resp.data)
-        setIsLoading(false)
-      }
-
-      )
-      .catch(error  => {
-        setError(error.message)
-        setIsLoading(false)
-      })
-  }, []) 
-
-  useEffect(() => {
-    fetchDataSim()
-  }, [fetchDataSim])
-
- 
-  if (error){
-    return <h1>Erro ao consultar a API: {error}</h1>
-  }
-
+    async function getIndicators() {
+      const response = await api.get('/indicadores');
+      setIndicators(response.data);
+    }
+    getIndicators();
+  }, []);
 
   function applyPercentage(num){
     let percentage;
@@ -90,27 +61,28 @@ function App() {
 
   function handleSimIndex(){
     
+    let simIndex;
+
     if (index === 'pre' && revenue === 'bruto'){
-      setSimIndex(0);
+      simIndex = 0;
     }else if (index === 'pos' && revenue === 'bruto'){
-      setSimIndex(1);
+      simIndex = 1;
     }else if (index === 'ipca' && revenue === 'bruto'){
-      setSimIndex(2)
+      simIndex = 2;
     }else if (index === 'pre' && revenue === 'liquido'){
-      setSimIndex(3)
+      simIndex = 3;
     }else if (index === 'pos' && revenue === 'liquido'){
-      setSimIndex(4)
+      simIndex = 4;
     }else if (index === 'ipca' && revenue === 'liquido'){
-      setSimIndex(5)
+      simIndex = 5;
     }else{
       console.log('Esta opção não retorna dados de simulação válidos!');
+      simIndex = null;
     }
-
-  }
-
-  function handleSimData(){
     
-    console.log('HandleSimData called!');
+    return simIndex;
+
+
   }
 
 
@@ -149,43 +121,71 @@ function App() {
   }
 
   function handleResults(){
-    
-    handleSimIndex();
-    console.log(simIndex);
-    handleSimData()
 
+    let i = handleSimIndex();
     console.log('handleResults called!')
-    console.log(revenue, index, fstContribution, mthContribution);
+    setSimIndex(i);
     setResult(true);
   }
-  
+
   function showResults(){
     
     let i = simIndex;
-    console.log('sim[i].graficoValores.comAporte')
-    const dataOld = [
-       ['joago', 'fernando'],
-       ['fiz', 1000],
-       ["Rachel", 100],
-      ["Patrick", 200],
-      ["Eric", 1900],
+
+    /* let arrObj = 'sim[0].graficoValores.comAporte';
+
+    var comAporte = arrObj.map(function(obj) {
+      return Object.keys(obj).map(function(key) {
+          return obj[key];
+      });
+  }); */
+    const options = {
+      title: 'Projeção de Valores',
+      hAxis: { title: "tempo(meses)", viewWindow: { min: 0, max: 11 } },
+      vAxis: { title: "Valor (R$)", viewWindow: { min: 0, max: 2100 } },
+      legend: {position: 'bottom'},
+      
+    };
+
+    const comAporte = [
+      ["tempo (meses)", "Valor (R$)"],
+      ["0", 1000],
+      ["1", 1103.2737397822002],
+      ["2", 1206.8855709147763],
+      ["3", 1310.8366002208454],
+      ["4", 1415.1279381469494],
+      ["5", 1519.7606987749612],
+      ["6", 1624.7359998339643],
+      ["7", 1730.0549627121918],
+      ["8", 1835.7187124690122],
+      ["9", 1941.7283778469462],
+      ["10", 2048.0850912837323]
     ];
-    
-    const dataNew = [
-      ["Name", "Popularity"],
-      ["Cesar", 370],
-      ["Rachel", 600],
-      ["Patrick", 700],
-      ["Eric", 1500],
+
+    const semAporte = [
+      ["tempo (meses)", "Valor (R$)"],
+      ["0", 1000],
+      ["1", 1003.273739782199],
+      ["2", 1006.5581969365594],
+      ["3", 1009.853406548969],
+      ["4", 1013.1594038201774],
+      ["5", 1016.4762240661724],
+      ["6", 1019.8039027185573],
+      ["7", 1023.1424753249288],
+      ["8", 1026.4919775492574],
+      ["9", 1029.8524451722683],
+      ["10", 1033.2239140918239]
     ];
     
     let diffdata = {
-      old: dataOld,
-      new: dataNew,
+      old: comAporte,
+      new: semAporte,
     };
+
 
     if(result === true){
       return(
+        
         <div className='results'>
           <div>
             <h2>Resultado da Simulação</h2>
@@ -228,6 +228,8 @@ function App() {
                
               <Chart 
                 chartType="ColumnChart"
+                options={options}
+                
                 width="100%"
                 height='400px'
                 diffdata={diffdata}
@@ -273,9 +275,9 @@ function App() {
           </div>
           
           <div className='input'>
-            <label>CDI (ao ano)</label>
+            <label>IPCA (ao ano)</label>
             <input type="radio" id="IPCA" name="index" value="10,06%" onClick={()=> setIndex(indicators[1].nome)}/>
-            <label htmlFor="cdi">10,06%</label>
+            <label htmlFor="ipca">10,06%</label>
             
           </div>
           
