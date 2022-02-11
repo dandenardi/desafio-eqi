@@ -1,6 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Chart } from 'react-google-charts'
- 
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
+
+
 import './App.css';
 import axios from 'axios';
 
@@ -8,7 +12,7 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: 'http://localhost:3000'
 });
-//fazer os estados dos resultados (5), baseados em rendimento e indexacao (restante eh fixo)
+
 
 function App() {
 
@@ -30,6 +34,7 @@ function App() {
   const [revenue, setRevenue] = useState('bruto');
   const [index, setIndex] = useState('pre');
   const [deadline, setDeadline] = useState(0);
+  const [profitability, setProfitability] = useState(0)
   const [fstContribution, setFstContribution] = useState(0);
   const [mthContribution, setMthContribution] = useState(0);
   const [selectData, setSelectData] = useState(0);
@@ -140,7 +145,7 @@ function App() {
       });
   }); */
     const options = {
-      title: 'Projeção de Valores',
+      
       hAxis: { title: "tempo(meses)", viewWindow: { min: 0, max: 11 } },
       vAxis: { title: "Valor (R$)", viewWindow: { min: 0, max: 2100 } },
       legend: {position: 'bottom'},
@@ -191,37 +196,49 @@ function App() {
             <h2>Resultado da Simulação</h2>
           </div>
 
-          <div className='data-boxes'>
-            <div className='box'>
-              <h3>Valor final Bruto</h3>
-              <p>{sim[i].valorFinalBruto}</p>
-            </div>
-                      
-            <div className='box'>
-              <h3>Aliquota do IR</h3>
-              <p>{sim[i].aliquotaIR}</p>
-            </div>
-            
-            <div className='box'>
-                <h3>Valor Pago em IR</h3>
-              <p>{sim[i].valorPagoIR}</p>
-            </div>
-            
-            <div className='box'>
-              <h3>Valor final Líquido</h3>
-              <p>{sim[i].valorFinalLiquido}</p>
-            </div>  
-          
-            <div className='box'>
-              <h3>Valor Total Investido</h3>
-              <p>{sim[i].valorTotalInvestido}</p>
+          <div className="card-boxes">
+
+            <div class="card" >
+              <div class="card-body">
+                <h5 class="card-title">Valor final Bruto</h5>
+                <p class="card-text">{sim[i].valorFinalBruto}</p>
+              </div>
             </div>
 
-            <div className='box'>
-              <h3>Ganho Líquido</h3>
-              <p>{sim[i].ganhoLiquido}</p>
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Aliquota do IR</h5>
+                <p class="card-text">{sim[i].aliquotaIR}</p>
+              </div>
             </div>
-          </div>
+            
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Valor Pago em IR</h5>
+                <p class="card-text">{sim[i].valorPagoIR}</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Valor final Líquido</h5>
+                <p class="card-text">{sim[i].valorFinalLiquido}</p>
+              </div>
+            </div>
+            
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Valor Total Investido</h5>
+                <p class="card-text">{sim[i].valorTotalInvestido}</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Ganho Líquido</h5>
+                <p class="card-text">{sim[i].ganhoLiquido}</p>
+              </div>
+            </div>
 
           <div className='chart'>
               <h3>Projeção de Valores</h3>
@@ -231,7 +248,7 @@ function App() {
                 options={options}
                 
                 width="100%"
-                height='400px'
+                height="250%"
                 diffdata={diffdata}
                 legendToggle
               
@@ -239,92 +256,130 @@ function App() {
           </div>
 
         </div>
-
+      </div>
       )
     }else{
       return(null);
     }
-
+    
   }
  
   
   return (
+
     <div className="App">
+
       <h1>Simulador de Investimentos</h1> 
-      <div className='container1'>
-        <h3>Simulador</h3>
-        <div className='yield'>
-          <h6>Rendimento</h6>
-          <div className='opt'>
-            <input type="radio" id="bruto" name="revenue" value="bruto" onClick={()=> setRevenue('bruto')}/>
-            <label htmlFor="bruto">Bruto</label>
-            <input type="radio" id="liquido" name="revenue" value="liquido" onClick={()=> setRevenue('liquido')}/>
-            <label htmlFor="liquido">Líquido</label>
+      <div className='simulator'>
         
-          </div>
+        <div className='containers-holder'>
+            <h3>Simulador</h3>
+          <div className='containers'>
+            
+            <div className='container1'>
+                  
+              <h6 className='h6-title'>Rendimento</h6>
+              <div className='opt'>
+                <ButtonGroup variant="contained" aria-label="tipo de rendimento">
+                  <Button onClick={() => setRevenue('bruto')}>Bruto</Button>
+                  <Button onClick={() => setRevenue('liquido')}>Líquido</Button>
+                </ButtonGroup>
+            
+              </div>
+    
+              <div className='input'>
+                <TextField 
+                  id="standard-basic" 
+                  label="Aporte inicial" 
+                  variant="standard" 
+                  onChange={handleFstCtb}/>
+              </div>
+                
+              <div className='input'>
+                <TextField 
+                  id="standard-basic" 
+                  label="Prazo (em meses)" 
+                  variant="standard" 
+                  onChange={(e)=>{setDeadline(e.target.value)}}
+                />
+              </div>
+                
+              <div className='input'>
+                
+                <TextField
+                  id="outlined-read-only-input"
+                  label="IPCA (ao ano)"
+                  defaultValue="10,06%"
+                  variant="standard"
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+              </div>
+                
+              <div className='btn'>
+                <Button variant="outlined" onClick={cleanFields}>Limpar dados</Button>
+              </div>
+              
+            </div>
+            <div className='container2'>
+            
+              <h6 className='h6-title'>Tipos de indexação</h6>
+              <div className='opt'>
+                 <ButtonGroup variant="contained" aria-label="tipos de indexadores">
+                    <Button  onClick={()=> setIndex('pre')}>PRÉ</Button>
+                    <Button  onClick={()=> setIndex('pos')}>PÓS</Button>
+                    <Button  onClick={()=> setIndex('fixado')}>FIXADO</Button>
+                  </ButtonGroup>
+              </div>
 
-          <div className='input'>
-            <label className='error-fst-ctb' id='fst-ctb-label'>Aporte Inicial</label>
-            <input type='text' onChange={handleFstCtb}></input>
-            <div className='error-fst-ctb'></div>
-          </div>
-          
-          <div className='input'>
-            <label>Prazo (em meses)</label>
-            <input type='text' pattern="[0-9]+" onChange={handleDeadline}></input>
-          </div>
-          
-          <div className='input'>
-            <label>IPCA (ao ano)</label>
-            <input type="radio" id="IPCA" name="index" value="10,06%" onClick={()=> setIndex(indicators[1].nome)}/>
-            <label htmlFor="ipca">10,06%</label>
+              <div className='input'>
+                <TextField 
+                  id="standard-basic" 
+                  label="Aporte Mensal" 
+                  variant="standard" 
+                  onChange={handleMthCtb}
+                />
+
+              </div>
+              
+              <div className='input'>
+                <TextField 
+                  id="standard-basic" 
+                  label="Rentabilidade" 
+                  variant="standard" 
+                  onChange={(e)=>{setProfitability(e.target.value)}}
+                />
+              </div>
+              
+              <div className='input'>
+              <TextField
+                  id="outlined-read-only-input"
+                  label="CDI (ao ano)"
+                  defaultValue="9,15%"
+                  variant="standard"
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                />
+                
+              </div>
+              
+              <div className='btn'>
+                <Button variant="contained" onClick={handleResults}>Simular</Button>
+              </div>
+
+            </div>
             
           </div>
-          
-          <div className='btn'>
-            <button type="button" onClick={cleanFields}>Limpar campos</button>
-          </div>
-        
         </div>
-        <div className='container2'>
-          
-          <h6>Tipos de indexação</h6>
-          <div className='opt'>
-            <input type="radio" id="pre" name="index" value="pre" onClick={()=> setIndex('pre')}/>
-            <label htmlFor="pre">PRÉ</label>
-            <input type="radio" id="post" name="index" value="post" onClick={()=> setIndex('pos')}/>
-            <label htmlFor="post">PÓS</label>
-            <input type="radio" id="fixed" name="index" value="fixed" onClick={()=> setIndex('fixado')}/>
-            <label htmlFor="fixed">FIXADO</label>
-          </div>
-
-          <div className='input'>
-            <label id='mth-ctb'>Aporte Mensal</label>
-            <input type='text' pattern="[0-9]+" onChange={handleMthCtb}></input>
-          </div>
-          
-          <div className='input'>
-            <label>Rentabilidade</label>
-            <input type='text' pattern="[0-9]+" onChange={handleProfit}></input>
-          </div>
-          
-          <div className='input'>
-            <label>CDI (ao ano)</label>
-            <input type="radio" id="CDI" name="index" value="9,15%" onClick={()=> setIndex(indicators[0].nome)}/>
-            <label htmlFor="cdi">9,15%</label>
-            
-          </div>
-          
-          <div className='btn'>
-            <button type="button" onClick={handleResults}>Simular</button>
-          </div>
-
-        </div>  
+        
+        <div className='results'>
+          {showResults()}
+        </div>     
       </div>
-      <div className='results'>
-        {showResults()}
-      </div>     
-    </div>
+  </div>
+      
   );
 }
 
