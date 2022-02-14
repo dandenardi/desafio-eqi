@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Chart } from 'react-google-charts'
+
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -19,16 +19,18 @@ function App() {
   //estados da API
   const [apiData, setApiData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [apiWait, setApiWait] = useState(false);
   const [indicators, setIndicators] = useState(null);
   const [sim, setSim] = useState(null);
-  const [simIndex, setSimIndex] = useState('');
+  const [simIndex, setSimIndex] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [criteria, setCriteria] = useState('');
   const [simBoxValues, setSimBoxValues] = useState({});
   
-
-  const [simChartValues, setSimChartValues] = useState();
+  const [comAporteObj, setComAporteObj] = useState([]);
+  const [semAporteObj, setSemAporteObj] = useState([]);
+  const [comAporte, setComAporte] = useState([]);
+  const [semAporte, setSemAporte] = useState([]);
 
   const [result, setResult] = useState(false);
   const [revenue, setRevenue] = useState('bruto');
@@ -42,10 +44,30 @@ function App() {
 
   useEffect(() => {
     async function getSimData() {
-      const response = await api.get('/simulacoes');
+      
+      const response = await api.get('/simulacoes'); 
       setSim(response.data);
     }
     getSimData();  
+  }, []);
+  
+  useEffect(() => {
+    async function getChartData() {
+      let comAporteRaw = [];
+      let semAporteRaw = [];
+      
+      const response = await api.get('/simulacoes');
+      for (let chartElement of response.data){
+        
+        comAporteRaw.push(chartElement.graficoValores.comAporte);
+        semAporteRaw.push(chartElement.graficoValores.semAporte);
+      }
+       
+      setComAporteObj(comAporteObj => (comAporteRaw));
+      setSemAporteObj(semAporteObj => (semAporteRaw));
+      
+    }
+    getChartData();  
   }, []);
 
   useEffect(() => {
@@ -55,6 +77,7 @@ function App() {
     }
     getIndicators();
   }, []);
+  
 
   function applyPercentage(num){
     let percentage;
@@ -125,68 +148,50 @@ function App() {
     console.log('handleProfit called!');
   }
 
+  function handleChartData(){
+    
+    let i = simIndex;
+    
+    let comAporteStr = Object.keys(comAporteObj[i]).map(function (key) {
+          
+      // Using Number() to convert key to number type
+      // Using obj[key] to retrieve key value
+      return [Number(key), comAporteObj[i][key]];
+
+    });
+
+    let semAporteStr = Object.keys(comAporteObj[i]).map(function (key) {
+          
+      // Using Number() to convert key to number type
+      // Using obj[key] to retrieve key value
+      return [Number(key), comAporteObj[i][key]];
+
+    });
+    comAporteStr.unshift(['mes','valor']);
+    semAporteStr.unshift(['mes','valor']);
+    console.log(semAporteStr);
+    setComAporte(comAporte => (comAporteStr));
+    setSemAporte(semAporte => (semAporteStr));
+
+    return(comAporte, semAporte);
+  }
+
   function handleResults(){
 
     let i = handleSimIndex();
     console.log('handleResults called!')
     setSimIndex(i);
+    handleChartData();
     setResult(true);
   }
 
+
   function showResults(){
     
-    let i = simIndex;
 
-    /* let arrObj = 'sim[0].graficoValores.comAporte';
-
-    var comAporte = arrObj.map(function(obj) {
-      return Object.keys(obj).map(function(key) {
-          return obj[key];
-      });
-  }); */
-    const options = {
-      
-      hAxis: { title: "tempo(meses)", viewWindow: { min: 0, max: 11 } },
-      vAxis: { title: "Valor (R$)", viewWindow: { min: 0, max: 2100 } },
-      legend: {position: 'bottom'},
-      
-    };
-
-    const comAporte = [
-      ["tempo (meses)", "Valor (R$)"],
-      ["0", 1000],
-      ["1", 1103.2737397822002],
-      ["2", 1206.8855709147763],
-      ["3", 1310.8366002208454],
-      ["4", 1415.1279381469494],
-      ["5", 1519.7606987749612],
-      ["6", 1624.7359998339643],
-      ["7", 1730.0549627121918],
-      ["8", 1835.7187124690122],
-      ["9", 1941.7283778469462],
-      ["10", 2048.0850912837323]
-    ];
-
-    const semAporte = [
-      ["tempo (meses)", "Valor (R$)"],
-      ["0", 1000],
-      ["1", 1003.273739782199],
-      ["2", 1006.5581969365594],
-      ["3", 1009.853406548969],
-      ["4", 1013.1594038201774],
-      ["5", 1016.4762240661724],
-      ["6", 1019.8039027185573],
-      ["7", 1023.1424753249288],
-      ["8", 1026.4919775492574],
-      ["9", 1029.8524451722683],
-      ["10", 1033.2239140918239]
-    ];
+    let i = simIndex; 
+ 
     
-    let diffdata = {
-      old: comAporte,
-      new: semAporte,
-    };
-
 
     if(result === true){
       return(
@@ -198,61 +203,50 @@ function App() {
 
           <div className="card-boxes">
 
-            <div class="card" >
-              <div class="card-body">
-                <h5 class="card-title">Valor final Bruto</h5>
-                <p class="card-text">{sim[i].valorFinalBruto}</p>
+            <div className="card" >
+              <div className="card-body">
+                <h5 className="card-title">Valor final Bruto</h5>
+                <p className="card-text">{sim[i].valorFinalBruto}</p>
               </div>
             </div>
 
             <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Aliquota do IR</h5>
-                <p class="card-text">{sim[i].aliquotaIR}</p>
+              <div className="card-body">
+                <h5 className="card-title">Aliquota do IR</h5>
+                <p className="card-text">{sim[i].aliquotaIR}</p>
               </div>
             </div>
             
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Valor Pago em IR</h5>
-                <p class="card-text">{sim[i].valorPagoIR}</p>
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title">Valor Pago em IR</h5>
+                <p className="card-text">{sim[i].valorPagoIR}</p>
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Valor final Líquido</h5>
-                <p class="card-text">{sim[i].valorFinalLiquido}</p>
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title">Valor final Líquido</h5>
+                <p className="card-text">{sim[i].valorFinalLiquido}</p>
               </div>
             </div>
             
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Valor Total Investido</h5>
-                <p class="card-text">{sim[i].valorTotalInvestido}</p>
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title">Valor Total Investido</h5>
+                <p className="card-text">{sim[i].valorTotalInvestido}</p>
               </div>
             </div>
 
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Ganho Líquido</h5>
-                <p class="card-text">{sim[i].ganhoLiquido}</p>
+            <div className="card">
+              <div className="card-body">
+                <h5 className="card-title">Ganho Líquido</h5>
+                <p className="card-text">{sim[i].ganhoLiquido}</p>
               </div>
             </div>
 
           <div className='chart'>
-              <h3>Projeção de Valores</h3>
-               
-              <Chart 
-                chartType="ColumnChart"
-                options={options}
-                
-                width="100%"
-                height="250%"
-                diffdata={diffdata}
-                legendToggle
-              
-              />
+            
           </div>
 
         </div>
