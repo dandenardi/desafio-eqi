@@ -4,7 +4,7 @@ Para que o projeto funcione é necessário:
 
 Ter a fake API rodando:
   * Passo 1 - clonar ou realizar download do seguinte repositório: https://github.com/eqi-investimentos/desafio-fake-api
-  * Passo2 - acessar o diretório onde foi realizado a clonagem/download. 
+  * Passo2 - acessar o diretório onde foi realizada a clonagem/download. 
   * Passo 3 - executar npm install (apenas na primeira vez)
   * Passo 4 - Executar npx json-server db.json (a cada nova inicialização). 
   
